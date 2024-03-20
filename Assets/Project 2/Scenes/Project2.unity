@@ -1210,6 +1210,7 @@ GameObject:
   m_Component:
   - component: {fileID: 199264244}
   - component: {fileID: 199264243}
+  - component: {fileID: 199264245}
   m_Layer: 0
   m_Name: PlatformController
   m_TagString: Untagged
@@ -1232,8 +1233,6 @@ MonoBehaviour:
   PlatformPoolSize: 16
   PlatformInitialScale: {x: 3, y: 1, z: 3}
   EndPlatformPrefab: {fileID: 2050911771}
-  PerfectHitTolerance: 0.05
-  FailTolerance: -0.38
 --- !u!4 &199264244
 Transform:
   m_ObjectHideFlags: 0
@@ -1249,6 +1248,20 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 13
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &199264245
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 199264242}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95b29eb649f24f948ea60ecebc743b32, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PerfectHitTolerance: 0.05
+  FailTolerance: -0.38
 --- !u!1 &202035326
 GameObject:
   m_ObjectHideFlags: 0
