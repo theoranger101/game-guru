@@ -1,13 +1,14 @@
 using System;
 using Events;
+using Platforms.PlatformStates;
 using UnityEngine;
 
-namespace Project_2.Scripts.Platforms
+namespace Platforms
 {
     public class PlatformSplitter : MonoBehaviour
     {
-        private GameObject m_MovingPlatform;
-        private GameObject m_StationaryPlatform;
+        private Platform m_MovingPlatform;
+        private Platform m_StationaryPlatform;
 
         [Header("Tolerance Info")]
         public float PerfectHitTolerance = 0.5f;
@@ -26,41 +27,45 @@ namespace Project_2.Scripts.Platforms
         }
 
         // LMP -> Left-most point, RMP -> Right-most point
-        public void OnSplitPlatform(PlatformEvent evt)
+        private void OnSplitPlatform(PlatformEvent evt)
         {
             m_StationaryPlatform = evt.Platform1;
             m_MovingPlatform = evt.Platform2;
 
+            m_MovingPlatform.CurrentStateType = Platform.PlatformStateType.Stationary;
+            //
+            // Destroy(m_MovingPlatform.GetComponent<MovingPlatform>());
+            // Destroy(m_MovingPlatform.GetComponent<Rigidbody>());
+            
             var bounds_Stationary = m_StationaryPlatform.GetComponent<BoxCollider>().bounds;
 
             lmp_Stationary = bounds_Stationary.min.x;
             rmp_Stationary = bounds_Stationary.max.x;
 
+            Debug.Log(lmp_Stationary + " " + rmp_Stationary);
+            
             var bounds_Moving = m_MovingPlatform.GetComponent<BoxCollider>().bounds;
 
             lmp_Moving = bounds_Moving.min.x;
             rmp_Moving = bounds_Moving.max.x;
+            
+            Debug.Log(lmp_Moving + " " + rmp_Moving);
 
-            var outOfBoundsWithPerfectHitTolerance_Right =
-                !rmp_Moving.IsWithin(lmp_Stationary, rmp_Stationary, PerfectHitTolerance);
-            var outOfBoundsWithPerfectHitTolerance_Left =
-                !lmp_Moving.IsWithin(lmp_Stationary, rmp_Stationary, PerfectHitTolerance);
+            var outOfBounds_Right = !rmp_Moving.IsWithin(lmp_Stationary, rmp_Stationary, PerfectHitTolerance);
+            var outOfBounds_Left = !lmp_Moving.IsWithin(lmp_Stationary, rmp_Stationary, PerfectHitTolerance);
+            
+            Debug.Log(outOfBounds_Right + " " + outOfBounds_Left);
 
-            var outOfBoundsWithFailTolerance_Right =
-                !rmp_Moving.IsWithin(lmp_Stationary, rmp_Stationary, FailTolerance);
-            var outOfBoundsWithFailTolerance_Left = !lmp_Moving.IsWithin(lmp_Stationary, rmp_Stationary, FailTolerance);
-
-            if ((outOfBoundsWithPerfectHitTolerance_Right && outOfBoundsWithFailTolerance_Left) ||
-                (outOfBoundsWithPerfectHitTolerance_Left && outOfBoundsWithFailTolerance_Right))
+            if (outOfBounds_Right && outOfBounds_Left)
             {
                 Debug.Log("Fail");
             }
-            else if (outOfBoundsWithPerfectHitTolerance_Right)
+            else if (outOfBounds_Right)
             {
                 Debug.Log("Cutoff from right");
                 OnCutOffRight();
             }
-            else if (outOfBoundsWithPerfectHitTolerance_Left)
+            else if (outOfBounds_Left)
             {
                 Debug.Log("Cutoff from left");
                 OnCutOffLeft();
@@ -80,7 +85,7 @@ namespace Project_2.Scripts.Platforms
             // but i wanted to keep the theme of using the right-most/left-most points :)
             var remaining = Mathf.Abs(rmp_Stationary - lmp_Moving);
             var remainingCenter = rmp_Stationary - remaining / 2f;
-
+            
             CutOffAndSetRemaining(cutOff, cutOffCenter, remaining, remainingCenter);
         }
 
@@ -99,9 +104,11 @@ namespace Project_2.Scripts.Platforms
 
         private void CutOffAndSetRemaining(float cutOff, float cutOffCenter, float remaining, float remainingCenter)
         {
-            Destroy(m_MovingPlatform.GetComponent<MovingPlatform>());
-            Destroy(m_MovingPlatform.GetComponent<Rigidbody>());
-
+            if (remaining < FailTolerance)
+            {
+                Debug.Log("Fail");
+            }
+            
             var movingTransform = m_MovingPlatform.transform;
             var movingPosition = movingTransform.position;
             var movingScale = movingTransform.localScale;
@@ -110,8 +117,8 @@ namespace Project_2.Scripts.Platforms
             var cutOffObj = getPlatformEvt.Platform1;
             var cutOffTransform = cutOffObj.transform;
 
-            var cutOffRB = cutOffObj.GetComponent<Rigidbody>();
-            cutOffRB.useGravity = true;
+            cutOffObj.CurrentStateType = Platform.PlatformStateType.CutOff;
+            // var cutOffRB = cutOffObj.AddComponent<Rigidbody>();
 
             cutOffTransform.position = new Vector3(cutOffCenter, movingPosition.y, movingPosition.z);
             cutOffTransform.localScale = new Vector3(cutOff, movingScale.y, movingScale.z);
@@ -119,7 +126,6 @@ namespace Project_2.Scripts.Platforms
             movingTransform.position = new Vector3(remainingCenter, movingPosition.y, movingPosition.z);
             movingTransform.localScale = new Vector3(remaining, movingScale.y, movingScale.z);
 
-            // UpdateMovingPlatform();
             using var updatePlatformsEvt = PlatformEvent.Get().SendGlobal((int)PlatformEventType.UpdatePlatforms);
         }
     }

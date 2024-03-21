@@ -1,19 +1,21 @@
 using Events;
 using UnityEngine;
 
-namespace Project_2.Scripts.Platforms
+namespace Platforms
 {
     public enum PlatformEventType
     {
         Split = 0,
         UpdatePlatforms = 1,
         GetPooledPlatform = 2,
+        PerfectHit = 3,
+        Fail = 4
     }
     
     public class PlatformEvent : Event<PlatformEvent>
     {
-        public GameObject Platform1;
-        public GameObject Platform2;
+        public Platform Platform1;
+        public Platform Platform2;
         
         public static PlatformEvent Get()
         {
@@ -21,7 +23,7 @@ namespace Project_2.Scripts.Platforms
             return evt;
         }
 
-        public static PlatformEvent Get(GameObject stationaryPlatform, GameObject movingPlatform)
+        public static PlatformEvent Get(Platform stationaryPlatform, Platform movingPlatform)
         {
             var evt = GetPooledInternal();
             evt.Platform1 = stationaryPlatform;
@@ -30,20 +32,12 @@ namespace Project_2.Scripts.Platforms
             return evt;
         }
 
-        public static PlatformEvent Get(GameObject pooledPlatform)
+        public static PlatformEvent Get(Platform pooledPlatform)
         {
             var evt = GetPooledInternal();
             evt.Platform1 = pooledPlatform;
 
             return evt;
-        }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-
-            Platform1 = null;
-            Platform2 = null;
         }
     }
 }

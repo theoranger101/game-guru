@@ -1261,7 +1261,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   PerfectHitTolerance: 0.05
-  FailTolerance: -0.38
+  FailTolerance: 0.38
 --- !u!1 &202035326
 GameObject:
   m_ObjectHideFlags: 0
@@ -7381,7 +7381,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e0ced5b4e2f45289bf3fec52c2bfe5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Rigidbody: {fileID: 1221460567}
+  moveSpeed: 5
+  range: 10
 --- !u!54 &1221460567
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -9819,7 +9820,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1632216973
 Transform:
   m_ObjectHideFlags: 0
@@ -11210,7 +11211,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e0ced5b4e2f45289bf3fec52c2bfe5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Rigidbody: {fileID: 1908441512}
+  moveSpeed: 5
+  range: 10
 --- !u!54 &1908441512
 Rigidbody:
   m_ObjectHideFlags: 0
