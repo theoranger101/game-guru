@@ -5,20 +5,30 @@ using UnityEngine;
 
 public class CharacterBehaviour : MonoBehaviour
 {
+    public static Transform CharacterTransform;
+    
     [SerializeField]
     private Rigidbody m_Rigidbody;
-    
+
+    [SerializeField]
+    private Animator m_Animator;
+
+    private int HASH_DANCE = Animator.StringToHash("Dance");
 
 #if UNITY_EDITOR
     private void OnValidate()
     {
         m_Rigidbody = GetComponent<Rigidbody>();
+        m_Animator = GetComponentInChildren<Animator>();
+        
         m_Rigidbody.constraints = RigidbodyConstraints.FreezeRotation;
     }
 #endif
     
     private void OnEnable()
     {
+        CharacterTransform = transform;
+        
         GEM.AddListener<GameEvent>(OnStartLevel, channel:(int)GameEventType.Start);
         
         GEM.AddListener<GameEvent>(OnStartMovement, channel: (int)GameEventType.Success);
@@ -35,6 +45,8 @@ public class CharacterBehaviour : MonoBehaviour
 
     private void OnStartLevel(GameEvent evt)
     {
+        m_Animator.ResetTrigger(HASH_DANCE);
+        
         transform.position = evt.CharacterStartPosition;
         m_Rigidbody.useGravity = true;
     }
@@ -50,10 +62,6 @@ public class CharacterBehaviour : MonoBehaviour
             return;
 
         Debug.Log("Start dancing");
-        
-    }
-
-    private void OnTriggerEnter(Collider other)
-    {
+        m_Animator.SetTrigger(HASH_DANCE);
     }
 }

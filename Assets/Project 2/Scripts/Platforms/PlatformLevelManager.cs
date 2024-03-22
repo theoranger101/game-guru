@@ -1,9 +1,7 @@
-using System.Collections;
 using System.Collections.Generic;
 using Core;
 using Events;
 using UnityEngine;
-using Random = System.Random;
 
 namespace Platforms
 {
@@ -24,24 +22,23 @@ namespace Platforms
         private List<Platform> m_LevelPlatforms = new();
 
         private GeneralSettings m_GeneralSettings;
-
-        private float m_CharPathDelay;
-        private WaitForSeconds m_ResetDelay;
-
+        
         private void OnEnable()
         {
             GEM.AddListener<GameEvent>(OnLoadLevel, channel: (int)GameEventType.Load);
+            GEM.AddListener<GameEvent>(OnLevelEnd, channel:(int)GameEventType.End);
 
             GEM.AddListener<PlatformEvent>(UpdateMovingPlatform, channel: (int)PlatformEventType.UpdatePlatforms);
-            GEM.AddListener<PlatformEvent>(OnFail, channel: (int)PlatformEventType.Fail);
+            GEM.AddListener<PlatformEvent>(OnFail, channel: (int)PlatformEventType.Fall);
         }
 
         private void OnDisable()
         {
-            GEM.AddListener<GameEvent>(OnLoadLevel, channel: (int)GameEventType.Load);
+            GEM.RemoveListener<GameEvent>(OnLoadLevel, channel: (int)GameEventType.Load);
+            GEM.RemoveListener<GameEvent>(OnLevelEnd, channel:(int)GameEventType.End);
 
             GEM.RemoveListener<PlatformEvent>(UpdateMovingPlatform, channel: (int)PlatformEventType.UpdatePlatforms);
-            GEM.RemoveListener<PlatformEvent>(OnFail, channel: (int)PlatformEventType.Fail);
+            GEM.RemoveListener<PlatformEvent>(OnFail, channel: (int)PlatformEventType.Fall);
         }
 
         private void Start()
@@ -56,7 +53,7 @@ namespace Platforms
             using var startEvt = GameEvent.Get(m_StationaryPlatform.Position.WithY(m_GeneralSettings.GlobalY))
                 .SendGlobal((int)GameEventType.Start);
 
-            GEM.AddListener<InputEvent>(HandleInput, channel: (int)InputEventType.Tap);
+            ToggleListenToInput(true);
         }
 
         private void CreateLevel(int platformCount)
@@ -98,33 +95,23 @@ namespace Platforms
 
         private void OnFail(PlatformEvent evt)
         {
+            ToggleListenToInput(false);
+
             m_FinishPlatform = null;
             using var failEvt = GameEvent.Get(CalculateCharacterPath()).SendGlobal((int)GameEventType.Fail);
-            
-            OnLevelEnd(false);
         }
 
         private void OnSuccess()
         {
+            ToggleListenToInput(false);
+
             m_LevelPlatforms.Add(m_FinishPlatform);
             using var successEvt = GameEvent.Get(CalculateCharacterPath()).SendGlobal((int)GameEventType.Success);
-            
-            OnLevelEnd(true);
         }
 
-        private void OnLevelEnd(bool success)
+        private void OnLevelEnd(GameEvent evt)
         {
-            GEM.RemoveListener<InputEvent>(HandleInput, channel: (int)InputEventType.Tap);
-
-            m_ResetDelay = new WaitForSeconds(m_CharPathDelay);
-            StartCoroutine(ResetPlatformsWithDelay(success));
-        }
-
-        private IEnumerator ResetPlatformsWithDelay(bool success)
-        {
-            yield return m_ResetDelay;
-            
-            ResetLevelPlatforms(!success);
+            ResetLevelPlatforms(!evt.Success);
         }
 
         private void UpdateMovingPlatform(PlatformEvent evt = null)
@@ -143,13 +130,7 @@ namespace Platforms
 
             m_MovingPlatform.transform.localScale = m_StationaryPlatform.transform.localScale;
         }
-
-        private void HandleInput(InputEvent inputEvent)
-        {
-            using var evt = PlatformEvent.Get(m_StationaryPlatform, m_MovingPlatform)
-                .SendGlobal((int)PlatformEventType.CheckSplit);
-        }
-
+        
         private (Vector3[], float) CalculateCharacterPath()
         {
             var path = new List<Vector3>();
@@ -165,8 +146,26 @@ namespace Platforms
                 path.Add(m_LevelPlatforms[i].Collider.bounds.center.WithY(m_GeneralSettings.GlobalY));
             }
 
-            m_CharPathDelay = path.Count * m_GeneralSettings.CharacterSpeedPerPlatform;
-            return (path.ToArray(), m_CharPathDelay);
+            var duration = path.Count * m_GeneralSettings.CharacterSpeedPerPlatform;
+            return (path.ToArray(), duration);
+        }
+
+        private void HandleInput(InputEvent inputEvent)
+        {
+            using var evt = PlatformEvent.Get(m_StationaryPlatform, m_MovingPlatform)
+                .SendGlobal((int)PlatformEventType.CheckSplit);
+        }
+        
+        private void ToggleListenToInput(bool listen)
+        {
+            if (listen)
+            {
+                GEM.AddListener<InputEvent>(HandleInput, channel: (int)InputEventType.Tap);
+            }
+            else
+            {
+                GEM.RemoveListener<InputEvent>(HandleInput, channel: (int)InputEventType.Tap);
+            }
         }
     }
 }

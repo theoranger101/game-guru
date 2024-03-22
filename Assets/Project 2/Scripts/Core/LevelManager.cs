@@ -34,8 +34,7 @@ namespace Core
             ToggleListenToTapInput(true);
         }
 
-        //change name
-        private void OnTap(InputEvent evt)
+        private void OnTapToPlay(InputEvent evt)
         {
             using var startLevelEvt = GameEvent.Get(m_GeneralSettings.LevelPlatformCounts[LevelIndex.Value])
                 .SendGlobal((int)GameEventType.Load);
@@ -51,23 +50,26 @@ namespace Core
                 LevelIndex.Value = 0;
             }
 
-            OnLevelEnd(evt.PathDuration);
+            OnLevelEnd(evt.PathDuration, true);
         }
 
         private void OnFail(GameEvent evt)
         {
-            OnLevelEnd(evt.PathDuration);
+            OnLevelEnd(evt.PathDuration, false);
         }
 
-        private void OnLevelEnd(float delay)
+        private void OnLevelEnd(float delay, bool success)
         {
             m_ResetDelay = new WaitForSeconds(delay);
-            StartCoroutine(ToggleInputWithDelay(true));
+            
+            StartCoroutine(OnLevelEndWithDelay(true, success));
         }
 
-        private IEnumerator ToggleInputWithDelay(bool listen)
+        private IEnumerator OnLevelEndWithDelay(bool listen, bool success)
         {
             yield return m_ResetDelay;
+            
+            using var evt = GameEvent.Get(success).SendGlobal((int)GameEventType.End);
             ToggleListenToTapInput(listen);
         }
 
@@ -75,11 +77,11 @@ namespace Core
         {
             if (listen)
             {
-                GEM.AddListener<InputEvent>(OnTap, channel: (int)InputEventType.Tap);
+                GEM.AddListener<InputEvent>(OnTapToPlay, channel: (int)InputEventType.Tap);
             }
             else
             {
-                GEM.RemoveListener<InputEvent>(OnTap, channel: (int)InputEventType.Tap);
+                GEM.RemoveListener<InputEvent>(OnTapToPlay, channel: (int)InputEventType.Tap);
             }
         }
     }

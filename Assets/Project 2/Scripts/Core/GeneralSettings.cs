@@ -33,9 +33,11 @@ namespace Core
         [Header("Platform Settings")]
         public int PlatformPoolSize = 32;
 
-        public float PlatformMoveSpeed = 1f;
         public Vector3 InitialPlatformScale = new(3f, 1f, 3f);
+        public float PlatformMoveSpeed = 1f;
         public float GlobalY => InitialPlatformScale.y / 2f;
+
+        public float PlatformMoveRange = 5f;
         
         public List<Material> PlatformColors = new List<Material>();
         public Material FinishPlatformMaterial;

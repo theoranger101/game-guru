@@ -6,7 +6,7 @@ namespace Platforms
     public class Platform : MonoBehaviour
     {
         // implementing state logic for this simple structure where states rarely change and each state does not have much
-        // special functionality is not very viable, i implemented it to show an example of my knowledge. 
+        // special functionality is not very viable, i implemented it as an example.
         public enum PlatformStateType
         {
             Moving = 0,

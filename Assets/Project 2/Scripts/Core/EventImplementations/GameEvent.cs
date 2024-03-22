@@ -9,6 +9,7 @@ namespace Core
         Start = 1,
         Success = 2,
         Fail = 3,
+        End = 4
     }
 
     public class GameEvent : Event<GameEvent>
@@ -19,13 +20,15 @@ namespace Core
         
         public Vector3[] CharacterPath;
         public float PathDuration;
+
+        public bool Success;
         
         public static GameEvent Get()
         {
             var evt = GetPooledInternal();
             return evt;
         }
-        
+
         public static GameEvent Get(int platformCount)
         {
             var evt = GetPooledInternal();
@@ -47,6 +50,13 @@ namespace Core
             evt.CharacterPath = valueTuple.path;
             evt.PathDuration = valueTuple.duration;
 
+            return evt;
+        }
+        
+        public static GameEvent Get(bool success)
+        {
+            var evt = GetPooledInternal();
+            evt.Success = success;
             return evt;
         }
     }

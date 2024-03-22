@@ -5,11 +5,11 @@ namespace Platforms
     public enum PlatformEventType
     {
         CheckSplit = 0,
-        Split = 1,
+        OnSplit = 1,
         UpdatePlatforms = 2,
-        GetPooledPlatform = 3,
-        PerfectHit = 4,
-        Fail = 5,
+        PerfectHit = 3,
+        Fall = 4,
+        GetPooledPlatform = 5,
         AddPlatformToPool = 6,
     }
     

@@ -106,7 +106,7 @@ namespace Platforms
 
         private void CutOffAndSetRemaining(float cutOff, float cutOffCenter, float remaining, float remainingCenter)
         {
-            using var splitEvt = PlatformEvent.Get().SendGlobal((int)PlatformEventType.Split);
+            using var splitEvt = PlatformEvent.Get().SendGlobal((int)PlatformEventType.OnSplit);
 
             if (remaining < m_FailTolerance)
             {
@@ -150,7 +150,7 @@ namespace Platforms
         private void OnFail()
         {
             m_MovingPlatform.CurrentStateType = Platform.PlatformStateType.CutOff;
-            using var failEvt = PlatformEvent.Get().SendGlobal(channel: (int)PlatformEventType.Fail);
+            using var failEvt = PlatformEvent.Get().SendGlobal(channel: (int)PlatformEventType.Fall);
         }
     }
 }

@@ -33,7 +33,7 @@ public class ComboManager : MonoBehaviour
         if (m_ComboStarted) return;
 
         m_ComboStarted = true;
-        GEM.AddListener<PlatformEvent>(OnComboBroken, channel: (int)PlatformEventType.Split);
+        GEM.AddListener<PlatformEvent>(OnComboBroken, channel: (int)PlatformEventType.OnSplit);
     }
 
     private void OnComboBroken(PlatformEvent evt)
@@ -41,6 +41,6 @@ public class ComboManager : MonoBehaviour
         m_CurrentCombo = 0;
         m_ComboStarted = false;
 
-        GEM.RemoveListener<PlatformEvent>(OnComboBroken, channel: (int)PlatformEventType.Split);
+        GEM.RemoveListener<PlatformEvent>(OnComboBroken, channel: (int)PlatformEventType.OnSplit);
     }
 }
