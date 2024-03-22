@@ -9,7 +9,8 @@ namespace Core
         Start = 1,
         Success = 2,
         Fail = 3,
-        End = 4
+        End = 4,
+        Dance = 5
     }
 
     public class GameEvent : Event<GameEvent>

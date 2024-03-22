@@ -22,11 +22,13 @@ namespace Platforms
         private List<Platform> m_LevelPlatforms = new();
 
         private GeneralSettings m_GeneralSettings;
-        
+
+        private Vector3 m_InitialPlatformScale => m_GeneralSettings.InitialPlatformScale;
+
         private void OnEnable()
         {
             GEM.AddListener<GameEvent>(OnLoadLevel, channel: (int)GameEventType.Load);
-            GEM.AddListener<GameEvent>(OnLevelEnd, channel:(int)GameEventType.End);
+            GEM.AddListener<GameEvent>(OnLevelEnd, channel: (int)GameEventType.End);
 
             GEM.AddListener<PlatformEvent>(UpdateMovingPlatform, channel: (int)PlatformEventType.UpdatePlatforms);
             GEM.AddListener<PlatformEvent>(OnFail, channel: (int)PlatformEventType.Fall);
@@ -35,7 +37,7 @@ namespace Platforms
         private void OnDisable()
         {
             GEM.RemoveListener<GameEvent>(OnLoadLevel, channel: (int)GameEventType.Load);
-            GEM.RemoveListener<GameEvent>(OnLevelEnd, channel:(int)GameEventType.End);
+            GEM.RemoveListener<GameEvent>(OnLevelEnd, channel: (int)GameEventType.End);
 
             GEM.RemoveListener<PlatformEvent>(UpdateMovingPlatform, channel: (int)PlatformEventType.UpdatePlatforms);
             GEM.RemoveListener<PlatformEvent>(OnFail, channel: (int)PlatformEventType.Fall);
@@ -62,19 +64,37 @@ namespace Platforms
 
             for (var i = 0; i < platformCount; i++)
             {
-                var platform = PlatformExtensions.GetPlatformFromPool();
-                platform.transform.position = new Vector3(0f, 0f, levelOffset + i * 3f);
-                platform.Renderer.material = m_GeneralSettings.PlatformColors.GetRandomMaterial();
+                var platform = SetupPlatform(levelOffset + i * 3f);
                 m_LevelPlatforms.Add(platform);
             }
 
-            m_FinishPlatform = PlatformExtensions.GetPlatformFromPool();
-            m_FinishPlatform.transform.position = new Vector3(0f, 0f, levelOffset + platformCount * 3f);
-            m_FinishPlatform.CurrentStateType = Platform.PlatformStateType.Finish;
-            m_FinishPlatform.Renderer.material = m_GeneralSettings.FinishPlatformMaterial;
+            SetupFinishPlatform(levelOffset + platformCount * 3f);
 
             m_CurrentPlatformIndex = 0;
             UpdateMovingPlatform();
+        }
+
+        private Platform SetupPlatform(float pos)
+        {
+            var platform = PlatformExtensions.GetPlatformFromPool();
+            platform.CurrentStateType = Platform.PlatformStateType.Inactive;
+            
+            var platformT = platform.transform;
+
+            platformT.position = new Vector3(0f, 0f, pos);
+            platformT.localScale = m_InitialPlatformScale;
+
+            platform.Renderer.material = m_GeneralSettings.PlatformColors.GetRandomMaterial();
+            
+            return platform;
+        }
+        
+        private void SetupFinishPlatform(float pos)
+        {
+            m_FinishPlatform = SetupPlatform(pos);
+            
+            m_FinishPlatform.CurrentStateType = Platform.PlatformStateType.Finish;
+            m_FinishPlatform.Renderer.material = m_GeneralSettings.FinishPlatformMaterial;
         }
 
         private void ResetLevelPlatforms(bool setInactive)
@@ -130,7 +150,7 @@ namespace Platforms
 
             m_MovingPlatform.transform.localScale = m_StationaryPlatform.transform.localScale;
         }
-        
+
         private (Vector3[], float) CalculateCharacterPath()
         {
             var path = new List<Vector3>();
@@ -155,7 +175,7 @@ namespace Platforms
             using var evt = PlatformEvent.Get(m_StationaryPlatform, m_MovingPlatform)
                 .SendGlobal((int)PlatformEventType.CheckSplit);
         }
-        
+
         private void ToggleListenToInput(bool listen)
         {
             if (listen)

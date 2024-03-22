@@ -7,6 +7,7 @@ namespace Platforms.PlatformStates
         public InactiveState(Platform platform) : base(platform)
         {
             Platform.transform.position = Vector3.zero;
+            Platform.gameObject.layer = 0;
             Platform.gameObject.SetActive(false);
         }
 

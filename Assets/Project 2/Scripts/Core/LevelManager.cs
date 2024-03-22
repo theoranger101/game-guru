@@ -60,8 +60,8 @@ namespace Core
 
         private void OnLevelEnd(float delay, bool success)
         {
-            m_ResetDelay = new WaitForSeconds(delay);
-            
+            m_ResetDelay = success ? new WaitForSeconds(delay + m_GeneralSettings.CharacterDanceSequenceDuration) : new WaitForSeconds(delay);
+
             StartCoroutine(OnLevelEndWithDelay(true, success));
         }
 

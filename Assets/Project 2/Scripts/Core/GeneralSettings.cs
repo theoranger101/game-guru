@@ -49,6 +49,7 @@ namespace Core
 
         [Header("Other Settings")]
         public float CharacterSpeedPerPlatform = 1f;
+        public float CharacterDanceSequenceDuration = 2f;
 
         public Sound PerfectHitSound;
     }
