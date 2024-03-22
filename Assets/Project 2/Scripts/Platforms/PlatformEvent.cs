@@ -1,15 +1,16 @@
 using Events;
-using UnityEngine;
 
 namespace Platforms
 {
     public enum PlatformEventType
     {
-        Split = 0,
-        UpdatePlatforms = 1,
-        GetPooledPlatform = 2,
-        PerfectHit = 3,
-        Fail = 4
+        CheckSplit = 0,
+        Split = 1,
+        UpdatePlatforms = 2,
+        GetPooledPlatform = 3,
+        PerfectHit = 4,
+        Fail = 5,
+        AddPlatformToPool = 6,
     }
     
     public class PlatformEvent : Event<PlatformEvent>

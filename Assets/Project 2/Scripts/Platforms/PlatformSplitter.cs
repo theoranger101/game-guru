@@ -1,6 +1,5 @@
-using System;
+using Core;
 using Events;
-using Platforms.PlatformStates;
 using UnityEngine;
 
 namespace Platforms
@@ -10,10 +9,8 @@ namespace Platforms
         private Platform m_MovingPlatform;
         private Platform m_StationaryPlatform;
 
-        [Header("Tolerance Info")]
-        public float PerfectHitTolerance = 0.5f;
-
-        public float FailTolerance = 1f;
+        private float m_PerfectHitTolerance => m_GeneralSettings.PerfectHitTolerance;
+        private float m_FailTolerance => m_GeneralSettings.FailTolerance;
 
         private float lmp_Stationary;
         private float rmp_Stationary;
@@ -21,9 +18,21 @@ namespace Platforms
         private float lmp_Moving;
         private float rmp_Moving;
 
+        private GeneralSettings m_GeneralSettings;
+
+        private void Awake()
+        {
+            m_GeneralSettings = GeneralSettings.Get();
+        }
+
         private void OnEnable()
         {
-            GEM.AddListener<PlatformEvent>(OnSplitPlatform, channel: (int)PlatformEventType.Split);
+            GEM.AddListener<PlatformEvent>(OnSplitPlatform, channel: (int)PlatformEventType.CheckSplit);
+        }
+
+        private void OnDisable()
+        {
+            GEM.RemoveListener<PlatformEvent>(OnSplitPlatform, channel: (int)PlatformEventType.CheckSplit);
         }
 
         // LMP -> Left-most point, RMP -> Right-most point
@@ -33,32 +42,24 @@ namespace Platforms
             m_MovingPlatform = evt.Platform2;
 
             m_MovingPlatform.CurrentStateType = Platform.PlatformStateType.Stationary;
-            //
-            // Destroy(m_MovingPlatform.GetComponent<MovingPlatform>());
-            // Destroy(m_MovingPlatform.GetComponent<Rigidbody>());
-            
-            var bounds_Stationary = m_StationaryPlatform.GetComponent<BoxCollider>().bounds;
+
+            var bounds_Stationary = m_StationaryPlatform.Collider.bounds;
 
             lmp_Stationary = bounds_Stationary.min.x;
             rmp_Stationary = bounds_Stationary.max.x;
 
-            Debug.Log(lmp_Stationary + " " + rmp_Stationary);
-            
-            var bounds_Moving = m_MovingPlatform.GetComponent<BoxCollider>().bounds;
+            var bounds_Moving = m_MovingPlatform.Collider.bounds;
 
             lmp_Moving = bounds_Moving.min.x;
             rmp_Moving = bounds_Moving.max.x;
-            
-            Debug.Log(lmp_Moving + " " + rmp_Moving);
 
-            var outOfBounds_Right = !rmp_Moving.IsWithin(lmp_Stationary, rmp_Stationary, PerfectHitTolerance);
-            var outOfBounds_Left = !lmp_Moving.IsWithin(lmp_Stationary, rmp_Stationary, PerfectHitTolerance);
-            
-            Debug.Log(outOfBounds_Right + " " + outOfBounds_Left);
+            var outOfBounds_Right = !rmp_Moving.IsWithin(lmp_Stationary, rmp_Stationary, m_PerfectHitTolerance);
+            var outOfBounds_Left = !lmp_Moving.IsWithin(lmp_Stationary, rmp_Stationary, m_PerfectHitTolerance);
 
             if (outOfBounds_Right && outOfBounds_Left)
             {
                 Debug.Log("Fail");
+                OnFail();
             }
             else if (outOfBounds_Right)
             {
@@ -73,6 +74,7 @@ namespace Platforms
             else
             {
                 Debug.Log("Perfect hit");
+                OnPerfectHit();
             }
         }
 
@@ -85,7 +87,7 @@ namespace Platforms
             // but i wanted to keep the theme of using the right-most/left-most points :)
             var remaining = Mathf.Abs(rmp_Stationary - lmp_Moving);
             var remainingCenter = rmp_Stationary - remaining / 2f;
-            
+
             CutOffAndSetRemaining(cutOff, cutOffCenter, remaining, remainingCenter);
         }
 
@@ -104,21 +106,25 @@ namespace Platforms
 
         private void CutOffAndSetRemaining(float cutOff, float cutOffCenter, float remaining, float remainingCenter)
         {
-            if (remaining < FailTolerance)
+            using var splitEvt = PlatformEvent.Get().SendGlobal((int)PlatformEventType.Split);
+
+            if (remaining < m_FailTolerance)
             {
                 Debug.Log("Fail");
+                OnFail();
+                return;
             }
-            
+
             var movingTransform = m_MovingPlatform.transform;
-            var movingPosition = movingTransform.position;
+            var movingPosition = m_MovingPlatform.Position;
             var movingScale = movingTransform.localScale;
 
-            using var getPlatformEvt = PlatformEvent.Get().SendGlobal((int)PlatformEventType.GetPooledPlatform);
-            var cutOffObj = getPlatformEvt.Platform1;
+            var cutOffObj = PlatformExtensions.GetPlatformFromPool();
             var cutOffTransform = cutOffObj.transform;
 
+            cutOffObj.Renderer.material = m_MovingPlatform.Renderer.material;
+
             cutOffObj.CurrentStateType = Platform.PlatformStateType.CutOff;
-            // var cutOffRB = cutOffObj.AddComponent<Rigidbody>();
 
             cutOffTransform.position = new Vector3(cutOffCenter, movingPosition.y, movingPosition.z);
             cutOffTransform.localScale = new Vector3(cutOff, movingScale.y, movingScale.z);
@@ -127,6 +133,24 @@ namespace Platforms
             movingTransform.localScale = new Vector3(remaining, movingScale.y, movingScale.z);
 
             using var updatePlatformsEvt = PlatformEvent.Get().SendGlobal((int)PlatformEventType.UpdatePlatforms);
+        }
+
+        private void SnapPlatform()
+        {
+            m_MovingPlatform.transform.position = m_StationaryPlatform.Position.WithZ(m_MovingPlatform.Position.z);
+            using var updatePlatformsEvt = PlatformEvent.Get().SendGlobal((int)PlatformEventType.UpdatePlatforms);
+        }
+
+        private void OnPerfectHit()
+        {
+            using var perfectHitEvt = PlatformEvent.Get().SendGlobal(channel: (int)PlatformEventType.PerfectHit);
+            SnapPlatform();
+        }
+
+        private void OnFail()
+        {
+            m_MovingPlatform.CurrentStateType = Platform.PlatformStateType.CutOff;
+            using var failEvt = PlatformEvent.Get().SendGlobal(channel: (int)PlatformEventType.Fail);
         }
     }
 }

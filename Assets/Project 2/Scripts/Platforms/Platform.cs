@@ -1,4 +1,3 @@
-using System;
 using Platforms.PlatformStates;
 using UnityEngine;
 
@@ -17,7 +16,7 @@ namespace Platforms
             Inactive = 4,
         };
 
-        public PlatformState m_CurrentState;
+        private PlatformState m_CurrentState;
 
         public PlatformStateType CurrentStateType
         {
@@ -31,12 +30,16 @@ namespace Platforms
 
         private PlatformStateType m_CurrentStateType;
         
-        // void Start()
-        // {
-        //     // Set the initial state (change as needed)
-        //     CurrentStateType = PlatformStateType.Stationary;
-        //     SetState(CurrentStateType);
-        // }
+        public Vector3 Position => transform.position;
+
+        public BoxCollider Collider;
+        public Renderer Renderer;
+
+        private void Awake()
+        {
+            Collider = GetComponent<BoxCollider>();
+            Renderer = GetComponent<Renderer>();
+        }
 
         void Update()
         {
@@ -56,12 +59,6 @@ namespace Platforms
             };
 
             m_CurrentState.EnterState();
-        }
-
-        // You can add methods to trigger state transitions based on your game logic
-        public void TriggerMoveToFinish()
-        {
-            SetState(PlatformStateType.Moving);
         }
     }
 }

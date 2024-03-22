@@ -1,5 +1,3 @@
-using UnityEngine;
-
 namespace Platforms.PlatformStates
 {
     public class StationaryState : PlatformState

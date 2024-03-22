@@ -1,3 +1,4 @@
+using Core;
 using UnityEngine;
 
 namespace Platforms.PlatformStates
@@ -20,7 +21,7 @@ namespace Platforms.PlatformStates
         {
             m_Transform = platform.transform;
             m_GeneralSettings = GeneralSettings.Get();
-            
+
             platform.gameObject.SetActive(true);
         }
 
@@ -32,15 +33,14 @@ namespace Platforms.PlatformStates
 
         public override void UpdateState()
         {
-            // Move towards target position
             m_Transform.position = Vector3.MoveTowards(m_Transform.position, m_TargetPosition, m_MoveSpeed * Time.deltaTime);
 
             if (!(Vector3.Distance(m_Transform.position, m_TargetPosition) < 0.01f)) return;
-            
+
             m_MoveDirection *= -1f;
             UpdateTargetPosition();
         }
-        
+
         private void UpdateTargetPosition()
         {
             m_TargetPosition = m_InitialPosition + (m_MoveDirection * m_MoveRange);

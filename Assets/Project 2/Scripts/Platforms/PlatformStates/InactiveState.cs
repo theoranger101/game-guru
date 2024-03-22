@@ -1,10 +1,13 @@
+using UnityEngine;
+
 namespace Platforms.PlatformStates
 {
     public class InactiveState : PlatformState
     {
         public InactiveState(Platform platform) : base(platform)
         {
-            platform.gameObject.SetActive(false);
+            Platform.transform.position = Vector3.zero;
+            Platform.gameObject.SetActive(false);
         }
 
         public override void EnterState()
